@@ -1,0 +1,72 @@
+/*
+edge_lvl_row = full
+edge_lvl_col = -1
+*/
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,500');
+table.kindofblue {
+    display: table;
+    border-left: 1px solid rgb(171, 178, 185);
+    border-right: 1px solid rgb(171, 178, 185);
+    border-bottom: 2px solid rgb(23, 32, 42);
+}
+.kindofblue thead,
+.kindofblue tbody {
+    display: table-header-group;
+}
+.kindofblue tr {
+    display: table-row;
+}
+.kindofblue th.col_idx_name,
+.kindofblue th.col_name,
+.kindofblue td.row_idx_name,
+.kindofblue td.row_idx_post,
+.kindofblue th.row_name,
+.kindofblue td.tbl_cell {
+    display: table-cell;
+    padding: 0.75em;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 500;
+    font-size: 1.0em;
+}
+.kindofblue th.col_idx_pre,
+.kindofblue th.col_idx_name,
+.kindofblue tr th.col_name {
+    background: rgb(23, 32, 42);
+    color: white;
+}
+.kindofblue th.row_idx_name,
+.kindofblue td.row_idx_post {
+    background: rgb(39, 55, 70);
+    color: white;
+}
+.kindofblue th.col_idx_name {
+    text-align: right;
+}
+.kindofblue th.row_idx_name,
+.kindofblue th.row_name {
+    text-align: left;
+}
+.kindofblue th.col_name {
+    text-align: center;
+}
+.kindofblue th.col_idx_name,
+.kindofblue th.row_idx_name,
+.kindofblue th.row_name,
+.kindofblue th.col_edge,
+.kindofblue td.col_edge {
+    border-right: 1px solid rgb(171, 178, 185);
+}
+.kindofblue td.tbl_cell {
+    text-align: right;
+    font-weight: 400;
+}
+.kindofblue tr.tbl_row:nth-child(even),
+.kindofblue tr.tbl_row:nth-child(odd) {
+    background: unset;
+}
+.kindofblue tr.tbl_row {
+    border-bottom: 1px solid rgb(171, 178, 185);
+}
+.kindofblue tr.tbl_row:hover {
+    background: rgb(242, 244, 244);
+}
