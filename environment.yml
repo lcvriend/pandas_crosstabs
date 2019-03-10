@@ -1,0 +1,5 @@
+name: pandas-glit
+dependencies:
+- python=3.7
+- pandas=0.24.1
+- jupyter
