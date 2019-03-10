@@ -344,13 +344,13 @@ class Semantics(object):
     def col(self):
         return self._col
 
-    @col.setter
-    def col(self, col):
-        self._col = col
-
     @property
     def row(self):
         return self._row
+
+    @col.setter
+    def col(self, col):
+        self._col = col
 
     @row.setter
     def row(self, row):
