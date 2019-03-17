@@ -701,7 +701,7 @@ def aggregations(
     else:
         roundings = [roundings] * len(aggs)
 
-    if df.columns.nlevels > 1:
+    if level = 0 or df.columns.nlevels > 1:
         aggs.reverse()
         labels.reverse()
         roundings.reverse()
