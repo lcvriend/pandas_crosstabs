@@ -3,11 +3,23 @@ edge_lvl_row = full
 edge_lvl_col = -1
 */
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:400,500');
+/* variables */
+:root {
+    --hdr-color-dark: rgb(23, 32, 42);
+    --hdr-color-light: rgb(39, 55, 70);
+    --border-color-dark: rgb(23, 32, 42);
+    --border-color-light: rgb(171, 178, 185);
+    --cell-dark: rgb(214, 221, 228);
+    --cell-light: rgb(235, 240, 245);
+}
+
+/* table general */
 table.kindofblue {
     display: table;
-    border-left: 1px solid rgb(171, 178, 185);
-    border-right: 1px solid rgb(171, 178, 185);
-    border-bottom: 2px solid rgb(23, 32, 42);
+    border-collapse: collapse;
+    border-left: 1px solid var(--border-color-light);
+    border-right: 1px solid var(--border-color-light);
+    border-bottom: 2px solid var(--border-color-dark);
 }
 .kindofblue thead,
 .kindofblue tbody {
@@ -18,7 +30,7 @@ table.kindofblue {
 }
 .kindofblue th.col_idx_name,
 .kindofblue th.col_name,
-.kindofblue td.row_idx_name,
+.kindofblue th.row_idx_name,
 .kindofblue td.row_idx_post,
 .kindofblue th.row_name,
 .kindofblue td.tbl_cell {
@@ -26,17 +38,19 @@ table.kindofblue {
     padding: 0.75em;
     font-family: 'Roboto Mono', monospace;
     font-weight: 500;
-    font-size: 1.0em;
+    font-size: 12px;
 }
+
+/* indeces */
 .kindofblue th.col_idx_pre,
 .kindofblue th.col_idx_name,
 .kindofblue tr th.col_name {
-    background: rgb(23, 32, 42);
+    background: var(--hdr-color-dark);
     color: white;
 }
 .kindofblue th.row_idx_name,
 .kindofblue td.row_idx_post {
-    background: rgb(39, 55, 70);
+    background: var(--hdr-color-light);
     color: white;
 }
 .kindofblue th.col_idx_name {
@@ -49,24 +63,70 @@ table.kindofblue {
 .kindofblue th.col_name {
     text-align: center;
 }
+
+/* edges */
 .kindofblue th.col_idx_name,
 .kindofblue th.row_idx_name,
 .kindofblue th.row_name,
 .kindofblue th.col_edge,
 .kindofblue td.col_edge {
-    border-right: 1px solid rgb(171, 178, 185);
+    border-right: 1px solid var(--border-color-light);
 }
+
+/* cells */
 .kindofblue td.tbl_cell {
     text-align: right;
     font-weight: 400;
 }
-.kindofblue tr.tbl_row:nth-child(even),
-.kindofblue tr.tbl_row:nth-child(odd) {
+
+/* rows types */
+.kindofblue tr:nth-child(even),
+.kindofblue tr:nth-child(odd) {
     background: unset;
 }
 .kindofblue tr.tbl_row {
-    border-bottom: 1px solid rgb(171, 178, 185);
+    border-top: 1px solid var(--border-color-light);
 }
-.kindofblue tr.tbl_row:hover {
+.kindofblue tr.totals_row {
+    border-top: 2px solid var(--border-color-light);
+}
+.kindofblue tr.totals_row th,
+.kindofblue tr.totals_row td {
+    background: var(--cell-dark);
+    font-weight: bold;
+}
+.kindofblue tr.tbl_row.agg_row {
+    background: var(--cell-light);
+    border-top: 2px dotted var(--border-color-light);
+}
+.kindofblue tbody tr.tbl_row:hover {
     background: rgb(242, 244, 244);
+}
+
+/* column types */
+.kindofblue th.totals_col,
+.kindofblue th.totals_perc_col,
+.kindofblue td.totals_col,
+.kindofblue td.totals_perc_col {
+    font-weight: bold;
+}
+.kindofblue th.totals_col,
+.kindofblue td.totals_col {
+    border-left: 2px solid var(--border-color-light);
+}
+.kindofblue tbody td.totals_col,
+.kindofblue tbody td.totals_perc_col {
+    background: var(--cell-dark);
+}
+.kindofblue th.perc_col,
+.kindofblue td.perc_col,
+.kindofblue td.totals_perc_col {
+    font-style: italic;
+}
+.kindofblue th.agg_col,
+.kindofblue td.agg_col {
+    border-left: 2px dotted var(--border-color-light);
+}
+.kindofblue tbody tr:not(.totals_row) td.agg_col {
+    background: var(--cell-light);
 }
