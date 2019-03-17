@@ -634,17 +634,23 @@ def _grand_total(df, totals):
             return _totals_row(df, False).values.sum()
 
 
-def add_sub_agg(df, level, axis=0, aggs='sum', labels=None, rounding=1):
+def aggregations(
+    df,
+    level,
+    axis=0,
+    aggs='sum',
+    labels=None,
+    roundings=1
+):
     """
     Aggregate within the specified level of a multiindex.
-    (sum, count, mean, std, var, min, max)
+    Only value columns/rows will be used to perform the aggregation.
 
     Parameters
     ==========
     :param df: DataFrame
     :param level: int
-        Level of the multiindex to be used
-        for selecting the columns that will be subtotalled.
+        Level of the multiindex to be used.
 
     Optional keyword arguments
     ==========================
