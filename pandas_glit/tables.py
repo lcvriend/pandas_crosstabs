@@ -370,49 +370,62 @@ class FancyTable:
         return spans
 
 
-@pd.api.extensions.register_dataframe_accessor('semantics')
-class Semantics(object):
-    def __init__(self, pandas_obj):
-        self._obj = pandas_obj
-        self._col = None
-        self._row = None
+class Style:
+    path_to_css = Path(__file__).resolve().parent
+    DEFAULT = 'kindofblue'
+
+    def __init__(self, style=None):
+        if style is not None:
+            self._check_style(style)
+        self.style = self.DEFAULT if style is None else style
+
+    def _check_style(self, style):
+        if not isinstance(style, str):
+            raise TypeError('Input has to be the name (string) of a style.')
+        if style not in self.styles:
+            raise ValueError(
+                f'Style \'{style}\' not found, '
+                f'available styles are: {self.styles}'
+                )
 
     @property
-    def col(self):
-        return self._col
+    def styles(self):
+        return [
+            path.stem.split('_')[1]
+            for path in self.path_to_css.glob('table_*.css')
+            ]
 
     @property
-    def row(self):
-        return self._row
+    def style(self):
+        return self._style
 
-    @col.setter
-    def col(self, col):
-        self._col = col
-
-    @row.setter
-    def row(self, row):
-        self._row = row
-
-
-def add_semantics(df):
+    @style.setter
+    def style(self, value):
     """
-    Add basic semantics to DataFrame if not already present.
+        Setter for the style.
+        Also loads the edge levels in a style if any are defined.
     """
 
-    if df.semantics.col is None:
-        df.semantics.col = df.shape[1] * ['v']
-    if df.semantics.row is None:
-        df.semantics.row = df.shape[0] * ['v']
-    return df
+        self._style = value
 
+        edge_lvls = {'row': None, 'col': None}
+        axes = ['row', 'col']
+        lines = self.css.split('\n', 4)[1:3]
+        for line in lines:
+            try:
+                elems = line.split('=')
+                for axis in axes:
+                    if axis in elems[0]:
+                        edge_lvls[axis] = elems[1].strip()
+            except IndexError:
+                continue
+        self.edge_lvl_row = edge_lvls['row']
+        self.edge_lvl_col = edge_lvls['col']
 
-def copy_df(df, transpose=False):
-    """
-    Copy DataFrame while preserving the semantics.
-    """
-
-    col_semantics = df.semantics.col.copy()
-    row_semantics = df.semantics.row.copy()
+    @property
+    def css(self):
+        style_path = self.path_to_css / f'table_{self.style}.css'
+        return style_path.read_text()
 
     if not transpose:
         df = df.copy()
