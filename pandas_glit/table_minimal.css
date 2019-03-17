@@ -73,6 +73,9 @@ table.minimal {
 .minimal tr.tbl_row:nth-child(odd) {
     background: unset;
 }
+.minimal tr.totals_row {
+    border-top: 1px solid rgb(39, 223, 161);
+}
 .minimal thead {
     border-bottom: 2px solid rgb(25, 146, 106);
 }
