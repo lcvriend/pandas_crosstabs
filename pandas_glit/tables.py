@@ -830,7 +830,7 @@ def _grand_total(df, totals):
             return _totals_row(df, False).values.sum()
 
 
-def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
+def add_sub_agg(df, level, axis=0, aggs='sum', labels=None, rounding=1):
     """
     Aggregate within the specified level of a multiindex.
     (sum, count, mean, std, var, min, max)
@@ -839,13 +839,16 @@ def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
     ==========
     :param df: DataFrame
     :param level: int
-        Level of the multiindex to be used for selecting the columns that will be subtotalled.
+        Level of the multiindex to be used
+        for selecting the columns that will be subtotalled.
 
     Optional keyword arguments
     ==========================
     :param axis: {0, 'index' or 'rows', 1 or 'columns'}, default 0
-        If 0, 'index' or 'rows': apply function to row index. If 1 or 'columns': apply function to column index.
-    :param agg: {'sum', 'count', 'median', 'mean', 'std', 'var', 'min', 'max'} or func, default 'sum'
+        If 0, 'index' or 'rows': apply function to row index.
+        If 1 or 'columns': apply function to column index.
+    :param aggs: {function, list or str}, default 'sum'
+        Aggregation(s) to perform.
         - 'sum': sum of values
         - 'count': number of values
         - 'median': median
@@ -855,33 +858,72 @@ def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
         - 'min': minimum value
         - 'max': maximum value
         - func: function that aggregates a series and returns a scalar.
-    :param label: {str or None}, default None
-        Label for the aggregation row/column. If None will use the string that is passed to `agg`.
+    :param labels: {list, str or None}, default None
+        Label(s) for the aggregation row/column.
+        If None will use the string or function name that is passed to `agg`.
     :param round: int or None, default 1
-        Number of decimal places to round aggregation to. If None aggregation will not be rounded.
+        Number of decimal places to round aggregation to.
+        If None aggregation will not be rounded.
 
     Returns
     =======
     :sub_agg: DataFrame
     """
 
-    if not label:
-        label = agg
+    axis = AXIS_NAMES[axis]
+    if not isinstance(aggs, list):
+        aggs = [aggs]
+    if labels is None:
+        labels = [None] * len(aggs)
+    if not isinstance(labels, list):
+        labels = [labels]
+    if not len(aggs) == len(labels):
+        raise IndexError(
+            'Number of labels does not match the number '
+            'of aggregation functions.'
+            )
+    if isinstance(rounding, list):
+        if not len(aggs) == len(rounding):
+            raise IndexError(
+                'Not every aggregation has a rounding decimal specified. '
+                'Set list element to None if no rounding should be applied.'
+                )
+    else:
+        rounding = [rounding] * len(aggs)
 
-    # set axis
-    axis_names = {
-        0: 0,
-        1: 1,
-        'index': 0,
-        'rows': 0,
-        'columns': 1,
-    }
-    axis = axis_names[axis]
+    aggs.reverse()
+    labels.reverse()
+    rounding.reverse()
+
+    for agg, label, round in zip(aggs, labels, rounding):
+        df = _add_sub_agg(
+            df, level, axis=axis, agg=agg, label=label, round=round
+            )
+    return df
+
+
+def _add_sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
+    """
+    Main logic to the add_sub_agg function.
+    """
+
+    semantic_code = {
+        'sum': 't',
+        'count': 'c',
+        }
+    semantic_code = semantic_code.get(agg, 'a')
+
+    if label is None:
+        if isinstance(agg, str):
+        label = agg
+        else:
+            label = agg.__name__
+
     original_dtypes = dict(zip(df.columns.values, df.dtypes.values))
-    df_output = copy_df(df, transpose=not axis)
-    df = df_output.copy()
-    col_semantics = df_output.semantics.col
-    row_semantics = df_output.semantics.row
+    df_out = copy_df(df, transpose=not axis)
+    df = df_out.copy()
+    col_semantics = df_out.semantics.col
+    row_semantics = df_out.semantics.row
 
     # set levels
     nlevels = df.columns.nlevels
@@ -890,20 +932,22 @@ def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
             f'The index is not a multiindex. No subaggregation can occur.')
     if level >= nlevels - 1:
         raise Exception(
-            f'The index has {nlevels - 1} useable levels: {list(range(nlevels - 1))}. Level {level} is out of bounds.')
+            f'The index has {nlevels - 1} useable levels: '
+            f'{list(range(nlevels - 1))}. Level {level} is out of bounds.'
+            )
     nlevels += 1
     level += 1
 
     # deal with categorical indexes
-    if df_output.columns.levels[level].dtype.name == 'category':
-        new_level = df_output.columns.levels[level].add_categories(label)
-        df_output.columns.set_levels(new_level, level=level, inplace=True)
+    if df_out.columns.levels[level].dtype.name == 'category':
+        new_level = df_out.columns.levels[level].add_categories(label)
+        df_out.columns.set_levels(new_level, level=level, inplace=True)
 
     i = level + 1
     while i < (nlevels - 1):
         try:
-            new_level = df_output.columns.levels[i].add_categories('')
-            df_output.columns.set_levels(new_level, level=i, inplace=True)
+            new_level = df_out.columns.levels[i].add_categories('')
+            df_out.columns.set_levels(new_level, level=i, inplace=True)
         except:
             pass
         i += 1
@@ -937,10 +981,10 @@ def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
         key_new_col = tuple(lst_last_col)
 
         # insert new column
-        idx_col = df_output.columns.get_loc(key_last_col) + 1
-        extended_cols = df_output.insert(idx_col, key_new_col, 0)
-        col_semantics.insert(idx_col, 'a')
-        df_output = pd.DataFrame(df_output, columns=extended_cols)
+        idx_col = df_out.columns.get_loc(key_last_col) + 1
+        extended_cols = df_out.insert(idx_col, key_new_col, 0)
+        col_semantics.insert(idx_col, semantic_code)
+        df_out = pd.DataFrame(df_out, columns=extended_cols)
 
         # aggregate and update
         tbl_grp = (
@@ -948,21 +992,27 @@ def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
               .xs([*key], axis=1, level=level_list, drop_level=False)
             )
 
-        aggs = tbl_grp.agg(agg, axis=1).values
+        agg_vals = tbl_grp.agg(agg, axis=1).values
         if round is not None:
-            aggs = aggs.round(round)
+            agg_vals = agg_vals.round(round)
+        multiindex = pd.MultiIndex.from_tuples([key_new_col])
         df_col = pd.DataFrame(
-            data=aggs, columns=pd.MultiIndex.from_tuples(
-            [key_new_col]), index=df.index
+            data=agg_vals,
+            columns=multiindex,
+            index=df.index,
             )
-        df_output.update(df_col)
+        df_out.update(df_col)
 
-    df_output.semantics.col = col_semantics
-    df_output.semantics.row = row_semantics
-    df_output = copy_df(df_output, transpose=not axis)
     if axis == 0:
-        df_output = df_output.astype(original_dtypes)
-    return df_output
+        df_out = df_out.T
+        df_out = df_out.astype(original_dtypes)
+        df_out.semantics.col = row_semantics
+        df_out.semantics.row = col_semantics
+    else:
+        df_out.semantics.col = col_semantics
+        df_out.semantics.row = row_semantics
+
+    return df_out
 
 
 def order_cat(df, categories):
