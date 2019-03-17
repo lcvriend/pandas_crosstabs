@@ -668,19 +668,166 @@ def add_perc_cols(
             abs_col = *col, name_abs
 
         total = set_total(df, col, axis, totals)
-        col_idx = df_output.columns.get_loc(abs_col)
-        new_cols = df_output.columns.insert(col_idx + 1, new_col)
+def add_perc_cols2(
+    df,
+    axis='grand',
+    totals='auto',
+    name_abs='abs',
+    name_rel='%',
+    round=1,
+):
+    """
+    TBD
+    """
+
+    df_out = copy_df(df)
+    df_out = add_semantics(df_out)
+    col_semantics = df_out.semantics.col.copy()
+    row_semantics = df_out.semantics.row.copy()
+
+    # add column index for labelling percentage columns
+    nlevels = df_out.columns.nlevels + 1
+    levels = list(range(nlevels))
+    levels.append(levels.pop(0))
+    df_out = pd.concat([df_out], axis=1, keys=[name_abs]).reorder_levels(
+        levels, axis=1)
+
+    # add percentage columns
+    for col in df.columns:
+        new_col = col, name_rel
+        abs_col = col, name_abs
+        if isinstance(col, tuple):
+            new_col = *col, name_rel
+            abs_col = *col, name_abs
+
+        total = _find_total(df, col, axis, totals)
+        col_idx = df_out.columns.get_loc(abs_col)
+        new_cols = df_out.columns.insert(col_idx + 1, new_col)
         col_semantics.insert(col_idx + 1, 'p')
         if col_semantics[col_idx] == 'T':
             col_semantics[col_idx + 1] = 'P'
-        df_output = pd.DataFrame(df_output, columns=new_cols)
-        df_output[new_col] = df_output[abs_col] / total * 100
+        df_out = pd.DataFrame(df_out, columns=new_cols)
+        df_out[new_col] = df_out[abs_col] / total * 100
         if round is not None:
-            df_output[new_col] = df_output[new_col].round(round)
+            df_out[new_col] = df_out[new_col].round(round)
 
-    df_output.semantics.col = col_semantics
-    df_output.semantics.row = row_semantics
-    return df_output
+    df_out.semantics.col = col_semantics
+    df_out.semantics.row = row_semantics
+    return df_out
+
+
+def _find_total(df, col, axis, totals):
+    """
+    Mapper for mapping the totals functions.
+    """
+
+    mapper = {
+        0: _totals_row,
+        1: _totals_col,
+        'index': _totals_row,
+        'columns': _totals_col,
+        'grand': _grand_total,
+        }
+    if axis not in [1, 'columns']:
+        total = mapper[axis](df, totals)
+    else:
+        total = mapper[axis](df, col, totals)
+    return total
+
+
+def _totals_col(df, col, totals):
+    """
+    Return the total of a column in a DataFrame.
+    First check if the column already has a column total.
+    If not, caclulate the total. Return the total.
+
+    :returns: int, float
+    """
+
+    nrows, _ = df.shape
+    try:
+        df = return_semantics(df, axis=0, semantics=['v', 'T'])
+        if 'T' in df.semantics.row:
+            sel = [item == 'T' for item in df.semantics.row]
+            return df.iloc[sel][col].values[0]
+        else:
+            return df[col].sum()
+    except:
+        total = df.iloc[-1][col]
+        if totals == 'auto':
+            if not total == df.iloc[:nrows - 1][col].sum():
+                total = df[col].sum()
+            return total
+        elif totals:
+            return total
+        else:
+            return df[col].sum()
+
+
+def _totals_row(df, totals):
+    """
+    Return row totals of a DataFrame as a Series.
+    First check if the DataFrame already has a column with row totals.
+    If not calculate it. Return the Series with row totals.
+
+    :returns: Series
+    """
+
+    _, ncols = df.shape
+    try:
+        df = return_semantics(df, axis=1, semantics=['v', 'T'])
+        if 'T' in df.semantics.col:
+            sel = [item == 'T' for item in df.semantics.col]
+            df = df.loc[:, sel]
+            return df.iloc[:, 0]
+        else:
+            return df.sum(axis=1)
+    except:
+        total = df.iloc[:, -1]
+        if totals == 'auto':
+            if not total.equals(df.iloc[:, :ncols - 1].sum(axis=1)):
+                total = df.sum(axis=1)
+            return total
+        elif totals:
+            return total
+        else:
+            return df.sum(axis=1)
+
+
+def _grand_total(df, totals):
+    """
+    Return the grand total of a DataFrame.
+    First check if the DataFrame already has a grand total.
+    If not calculate it. Return the grand total.
+
+    :returns: int, float
+    """
+
+    nrows, ncols = df.shape
+    try:
+        df = return_semantics(df, semantics=['v', 'T'])
+        total_col = 'T' in df.semantics.col
+        total_row = 'T' in df.semantics.row
+        sel_col = [item == 'T' for item in df.semantics.col]
+        sel_row = [item == 'T' for item in df.semantics.row]
+        if total_col and total_row:
+            return df.loc[sel_row, sel_col].values[0][0]
+        elif total_col:
+            return df.loc[:, sel_col].sum().values[0]
+        elif total_row:
+            return df.loc[sel_row, :].sum(axis=1).values[0]
+        else:
+            return df.sum().sum()
+    except:
+        total = df.iloc[-1, -1]
+        if totals == 'auto':
+            if not total == df.iloc[:nrows - 1, :ncols - 1].values.sum():
+                total = _totals_row(df, 'auto').values.sum()
+            return total
+        elif totals:
+            return total
+        else:
+            return _totals_row(df, False).values.sum()
 
 
 def sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
