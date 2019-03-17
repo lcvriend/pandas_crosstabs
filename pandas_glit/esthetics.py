@@ -11,10 +11,15 @@ class FancyTable:
     Class for adding custom styling to DataFrames.
     """
     CLASS_VALUES_COL = {
-        'p': 'perc_col',
+        'pc': 'perc_col',
+        'pr': 'perc_col',
+        'pg': 'perc_col',
         'T': 'totals_col',
-        'P': 'totals_perc_col',
+        'Pc': 'totals_perc_col',
+        'Pr': 'totals_perc_col',
+        'Pg': 'totals_perc_col',
         'a': 'agg_col',
+        'c': 'agg_col',
     }
     CLASS_VALUES_ROW = {
         'T': 'totals_row',
