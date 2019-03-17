@@ -360,7 +360,7 @@ def percentages(
 
     Returns
     =======
-    :add_per_cols: DataFrame
+    :percentages: DataFrame
     """
 
     if not isinstance(label_abs, str):
@@ -671,13 +671,13 @@ def aggregations(
     :param labels: {list, str or None}, default None
         Label(s) for the aggregation row/column.
         If None will use the string or function name that is passed to `agg`.
-    :param round: int or None, default 1
+    :param roundings: {list, int or None}, default 1
         Number of decimal places to round aggregation to.
         If None aggregation will not be rounded.
 
     Returns
     =======
-    :sub_agg: DataFrame
+    :aggregations: DataFrame
     """
 
     axis = AXIS_NAMES[axis]
@@ -702,8 +702,8 @@ def aggregations(
         roundings = [roundings] * len(aggs)
 
     if df.columns.nlevels > 1:
-    aggs.reverse()
-    labels.reverse()
+        aggs.reverse()
+        labels.reverse()
         roundings.reverse()
 
     for agg, label, rounding in zip(aggs, labels, roundings):
