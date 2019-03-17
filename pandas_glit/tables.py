@@ -321,17 +321,96 @@ def add_perc_cols(
     return df_out
 
 
-def add_perc_cols2(
+def percentages(
     df,
     axis='grand',
+    label_abs='abs',
+    labels_rel='%',
+    roundings=1,
+    level_name=None,
     totals='auto',
-    name_abs='abs',
-    name_rel='%',
-    round=1,
-    level_name=None
 ):
     """
-    TBD
+    Add percentage columns to a DataFrame.
+    Ignores aggregation columns (such as mean, std, etc.)
+
+    Parameters
+    ==========
+    :param df: DataFrame
+
+    Optional keyword arguments
+    ==========================
+    :param axis: {list, 'grand', 'index' or 0, 'columns' or 1}, default 'grand'
+        'grand' - Calculate percentages from grand total.
+        'index', 0 - Calculate percentages from row totals.
+        'columns', 1 - Calculate percentages from column totals.
+    :param label_abs: string, default 'abs'
+        Label for the absolute columns.
+    :param labels_rel: {list, string}, default '%'
+        Label(s) for the relative columns.
+    :param roundings: {list, int or None}, default 1
+        Number of decimal places to round percentages to.
+        If None percentages will not be rounded.
+    :param level_name: {str, None}, default None
+        Name of the level added to the columns.
+    :param totals: boolean, {'auto'}, default 'auto'
+        'auto' - Check automatically (may backfire).
+        True - Take the totals from the DataFrame (last row/column/value).
+        False - Calculate the totals.
+
+    Returns
+    =======
+    :add_per_cols: DataFrame
+    """
+
+    if not isinstance(label_abs, str):
+        raise TypeError('Label for the absolute columns has to be a string.')
+    if not isinstance(axis, list):
+        axis = [axis]
+    if not isinstance(labels_rel, list):
+        labels_rel = [labels_rel] * len(axis)
+    if not len(axis) == len(labels_rel):
+        raise IndexError(
+            'Number of labels does not match the number '
+            'of aggregation functions.'
+            )
+    if isinstance(roundings, list):
+        if not len(axis) == len(roundings):
+            raise IndexError(
+                'Not every aggregation has a rounding decimal specified. '
+                'Set list element to None if no rounding should be applied.'
+                )
+    else:
+        roundings = [roundings] * len(axis)
+
+    axis.reverse()
+    labels_rel.reverse()
+    roundings.reverse()
+
+    for axis, label_rel, rounding in zip(axis, labels_rel, roundings):
+        df = _add_per_col(
+            df,
+            axis=axis,
+            label_abs=label_abs,
+            label_rel=label_rel,
+            round=rounding,
+            level_name=level_name,
+            totals=totals,
+            )
+    return df
+
+
+def _add_per_col(
+    df,
+    axis='grand',
+    label_abs='abs',
+    label_rel='%',
+    round=1,
+    level_name=None,
+    totals='auto',
+):
+    """
+    Main logic to the `percentages` function.
     """
 
     valid_semantics = ['v', 't', 'T', ]
@@ -344,6 +423,11 @@ def add_perc_cols2(
         'columns': 'r',
         'grand': 'g',
         }
+    type_names = {
+        'r': 'rows',
+        'c': 'cols',
+        'g': 'grnd',
+    }
     if axis not in perc_types:
         raise KeyError(
             f'Unexpected input for axis. Valid values are: {perc_types.keys()}'
@@ -363,11 +447,11 @@ def add_perc_cols2(
         levels = list(range(nlevels))
         levels.append(levels.pop(0))
         lvl_colnames = [
-            name_abs if item in valid_semantics else ''
+            label_abs if item in valid_semantics else ''
             for item in df_out.semantics.col
             ]
         df_out = pd.concat(
-                [df_out], axis=1, keys=[name_abs],
+                [df_out], axis=1, keys=[label_abs],
             ).reorder_levels(
                 levels, axis=1,
             )
@@ -388,24 +472,36 @@ def add_perc_cols2(
         if df.semantics.col[idx] not in valid_semantics:
             continue
 
-        # skip column if next column is already a percentage
+        # skip column if type is already present within next three columns
         try:
-            if df.semantics.col[idx + 1] == 'p':
+            for i in [1, 2, 3, ]:
+                item = df.semantics.col[idx + i].lower()
+                # break if next column is not percentage column
+                if not item.startswith('p'):
+                    check = False
+                    break
+                check = item == f'p{perc_type}'
+                if check:
+                    break
+            if check:
                 continue
         except IndexError:
             pass
 
         # set column names
         if edit:
-            new_col = *col[:-1], name_rel
+            new_col = *col[:-1], label_rel
             abs_col = col
-            print(new_col)
         else:
-            new_col = col, name_rel
-            abs_col = col, name_abs
+            new_col = col, label_rel
+            abs_col = col, label_abs
             if isinstance(col, tuple):
-                new_col = *col, name_rel
-                abs_col = *col, name_abs
+                new_col = *col, label_rel
+                abs_col = *col, label_abs
+
+        # test uniqueness of new column
+        if new_col in [col for col in df_out.columns]:
+            new_col = *col[:-1], f'{label_rel}-{type_names[perc_type]}'
 
         # calculate and add percentages
         total = _find_total(df, col, axis, totals)
