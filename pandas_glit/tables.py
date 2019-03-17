@@ -871,8 +871,6 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
             f'The index has {nlevels - 1} useable levels: '
             f'{list(range(nlevels - 1))}. Level {level} is out of bounds.'
             )
-    # nlevels += 1
-    # level += 1
 
     # deal with categorical indexes
     if df_out.columns.levels[level].dtype.name == 'category':
