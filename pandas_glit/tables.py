@@ -692,22 +692,23 @@ def aggregations(
             'Number of labels does not match the number '
             'of aggregation functions.'
             )
-    if isinstance(rounding, list):
-        if not len(aggs) == len(rounding):
+    if isinstance(roundings, list):
+        if not len(aggs) == len(roundings):
             raise IndexError(
                 'Not every aggregation has a rounding decimal specified. '
                 'Set list element to None if no rounding should be applied.'
                 )
     else:
-        rounding = [rounding] * len(aggs)
+        roundings = [roundings] * len(aggs)
 
+    if df.columns.nlevels > 1:
     aggs.reverse()
     labels.reverse()
-    rounding.reverse()
+        roundings.reverse()
 
-    for agg, label, round in zip(aggs, labels, rounding):
-        df = _add_sub_agg(
-            df, level, axis=axis, agg=agg, label=label, round=round
+    for agg, label, rounding in zip(aggs, labels, roundings):
+        df = _add_agg(
+            df, level, axis=axis, agg=agg, label=label, round=rounding
             )
     return df
 
