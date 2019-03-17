@@ -4,7 +4,6 @@ tables
 Wrappers for pandas for transforming DataFrame into aggregated tables.
 """
 
-import itertools
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 from pandas_glit.semantics import add_semantics
@@ -329,10 +328,27 @@ def add_perc_cols2(
     name_abs='abs',
     name_rel='%',
     round=1,
+    level_name=None
 ):
     """
     TBD
     """
+
+    valid_semantics = ['v', 't', 'T', ]
+
+    # set percentage type
+    perc_types = {
+        0: 'r',
+        1: 'c',
+        'index': 'r',
+        'columns': 'r',
+        'grand': 'g',
+        }
+    if axis not in perc_types:
+        raise KeyError(
+            f'Unexpected input for axis. Valid values are: {perc_types.keys()}'
+            )
+    perc_type = perc_types[axis]
 
     df_out = copy_df(df)
     df_out = add_semantics(df_out)
@@ -340,26 +356,64 @@ def add_perc_cols2(
     row_semantics = df_out.semantics.row.copy()
 
     # add column index for labelling percentage columns
-    nlevels = df_out.columns.nlevels + 1
-    levels = list(range(nlevels))
-    levels.append(levels.pop(0))
-    df_out = pd.concat([df_out], axis=1, keys=[name_abs]).reorder_levels(
-        levels, axis=1)
+    edit = True
+    if not any([item.lower().startswith('p') for item in col_semantics]):
+        edit = False
+        nlevels = df_out.columns.nlevels + 1
+        levels = list(range(nlevels))
+        levels.append(levels.pop(0))
+        lvl_colnames = [
+            name_abs if item in valid_semantics else ''
+            for item in df_out.semantics.col
+            ]
+        df_out = pd.concat(
+                [df_out], axis=1, keys=[name_abs],
+            ).reorder_levels(
+                levels, axis=1,
+            )
+        new_cols = list()
+        new_colnames = list(df_out.columns.names)
+        new_colnames[-1] = level_name
+        for idx, col in enumerate(df.columns):
+            tup = col, lvl_colnames[idx]
+            if isinstance(col, tuple):
+                tup = *col, lvl_colnames[idx]
+            new_cols.append(tup)
+        new_cols = pd.MultiIndex.from_tuples(new_cols, names=new_colnames)
+        df_out.columns = new_cols
 
     # add percentage columns
-    for col in df.columns:
-        new_col = col, name_rel
-        abs_col = col, name_abs
-        if isinstance(col, tuple):
-            new_col = *col, name_rel
-            abs_col = *col, name_abs
+    for idx, col in enumerate(df.columns):
+        # skip column if percentage does not make sense for data type
+        if df.semantics.col[idx] not in valid_semantics:
+            continue
 
+        # skip column if next column is already a percentage
+        try:
+            if df.semantics.col[idx + 1] == 'p':
+                continue
+        except IndexError:
+            pass
+
+        # set column names
+        if edit:
+            new_col = *col[:-1], name_rel
+            abs_col = col
+            print(new_col)
+        else:
+            new_col = col, name_rel
+            abs_col = col, name_abs
+            if isinstance(col, tuple):
+                new_col = *col, name_rel
+                abs_col = *col, name_abs
+
+        # calculate and add percentages
         total = _find_total(df, col, axis, totals)
         col_idx = df_out.columns.get_loc(abs_col)
         new_cols = df_out.columns.insert(col_idx + 1, new_col)
-        col_semantics.insert(col_idx + 1, 'p')
+        col_semantics.insert(col_idx + 1, f'p{perc_type}')
         if col_semantics[col_idx] == 'T':
-            col_semantics[col_idx + 1] = 'P'
+            col_semantics[col_idx + 1] = f'P{perc_type}'
         df_out = pd.DataFrame(df_out, columns=new_cols)
         df_out[new_col] = df_out[abs_col] / total * 100
         if round is not None:
