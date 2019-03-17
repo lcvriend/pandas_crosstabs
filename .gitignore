@@ -2,4 +2,5 @@ __pycache__/
 .vscode/
 .ipynb_checkpoints/
 temp/
+notebooks/testing.ipynb
 *.code-workspace
