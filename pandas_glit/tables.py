@@ -8,6 +8,10 @@ import itertools
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 from pathlib import Path
+from pandas_glit.semantics import add_semantics
+from pandas_glit.semantics import return_semantics
+from pandas_glit.semantics import copy_df
+from pandas_glit.semantics import AXIS_NAMES
 
 
 class FancyTable:
@@ -181,7 +185,7 @@ class FancyTable:
 
             level.extend(
                 [html_repr_idx_post(col_idx, item)
-                for col_idx, item in enumerate([''] * self.ncols)]
+                    for col_idx, item in enumerate([''] * self.ncols)]
                 )
             level = [f'{self.tab * 3}{el}' for el in level]
             all_levels.append(level)
@@ -401,10 +405,10 @@ class Style:
 
     @style.setter
     def style(self, value):
-    """
+        """
         Setter for the style.
         Also loads the edge levels in a style if any are defined.
-    """
+        """
 
         self._style = value
 
@@ -427,25 +431,16 @@ class Style:
         style_path = self.path_to_css / f'table_{self.style}.css'
         return style_path.read_text()
 
-    if not transpose:
-        df = df.copy()
-        df.semantics.col = col_semantics
-        df.semantics.row = row_semantics
-    else:
-        df = df.T.copy()
-        df.semantics.col = row_semantics
-        df.semantics.row = col_semantics
-    return df
-
 
 def ct(
     df,
     row_fields,
     column_fields,
     ignore_nan=False,
-    totals_name='Totals',
+    totals=None,
     totals_col=True,
     totals_row=True,
+    totals_name='Totals',
     perc_cols=False,
     perc_axis='grand',
     perc_round=1,
@@ -453,7 +448,10 @@ def ct(
     name_rel='%',
 ):
     """
-    Create frequency crosstab for selected categories mapped to specified row and column fields. Group by and count selected categories in df. Then set to rows and columns in crosstab output.
+    Create frequency crosstab for selected categories.
+    Categories are mapped to specified row and column fields.
+    Group by and count selected categories in df.
+    Then set to rows and columns in crosstab output.
 
     Parameters
     ==========
@@ -469,10 +467,14 @@ def ct(
         Ignore category combinations if they have nans.
     :param totals_name: str, default 'Totals'
         Name for total rows/columns (string).
+    :param totals: boolean, None default None
+        Shorthand for setting `totals_col` and `totals_row`.
+        Adds both totals to columns and to rows.
+        If set, overrides both arguments.
     :param totals_col: boolean, default True
-        Add totals column.
+        Add totals to column.
     :param totals_row: boolean, default True
-        Add totals row.
+        Add totals to row.
     :param perc_cols: boolean, default False
         Add relative frequency per column
     :param perc_axis: {'grand', 'index', 'columns'}, or {0,1}, default 'grand'
@@ -480,7 +482,8 @@ def ct(
         'index', 0 - Calculate percentages from row totals.
         'columns', 1 - Calculate percentages from column totals.
     :param round: int or None, default 1
-        Number of decimal places to round percentages to. If None percentages will not be rounded.
+        Number of decimal places to round percentages to.
+        If None percentages will not be rounded.
     :param name_abs: str, default 'abs'
         Name for absolute column.
     :param name_rel: str, default '%'
@@ -492,6 +495,10 @@ def ct(
     """
 
     df = df.copy()
+
+    if totals is not None:
+        totals_col = totals
+        totals_row = totals
 
     if not column_fields:
         column_fields = '_tmp'
@@ -523,10 +530,10 @@ def ct(
     while not check:
         try:
             col = df.columns[i]
-            if not col in group_cols:
+            if col not in group_cols:
                 check = True
             i += 1
-        except:
+        except KeyError:
             df['_tmp'] = '_tmp'
             col = '_tmp'
             check = True
@@ -551,7 +558,7 @@ def ct(
         if not totals_row:
             try:
                 df = df.drop(totals_name, axis=0, level=0)
-            except:
+            except KeyError:
                 df = df.drop(totals_name, axis=0)
     df.columns = df.columns.droplevel(0)
     df = df.fillna(0)
@@ -565,7 +572,7 @@ def ct(
     try:
         df = df.drop('_tmp', axis=1)
         df.columns.name = ''
-    except:
+    except KeyError:
         pass
 
     # add semantics
@@ -618,7 +625,8 @@ def add_perc_cols(
     :param name_rel: string, default '%'
         Name of relative column.
     :param round: int or None, default 1
-        Number of decimal places to round percentages to. If None percentages will not be rounded.
+        Number of decimal places to round percentages to.
+        If None percentages will not be rounded.
 
     Returns
     =======
@@ -633,7 +641,7 @@ def add_perc_cols(
                 return df.iloc[-1][col]
             else:
                 return df[col].sum()
-        except:
+        except TypeError:
             total = df.iloc[-1][col]
             if totals_mode == 'auto':
                 if not total == df.iloc[:nrows - 1][col].sum():
@@ -650,7 +658,7 @@ def add_perc_cols(
                 return df.iloc[:, -1]
             else:
                 return df.sum(axis=1)
-        except:
+        except TypeError:
             total = df.iloc[:, -1]
             if totals_mode == 'auto':
                 if not total.equals(df.iloc[:, :ncols - 1].sum(axis=1)):
@@ -673,7 +681,7 @@ def add_perc_cols(
                 return df.iloc[-1, :].sum()
             else:
                 return df.sum().sum()
-        except:
+        except TypeError:
             total = df.iloc[-1, -1]
             if totals_mode == 'auto':
                 if not total == df.iloc[:nrows - 1, :ncols - 1].values.sum():
@@ -691,22 +699,22 @@ def add_perc_cols(
                   'columns': check_for_totals_col,
                   'grand': check_for_grand_total,
                   }
-        if not axis in [1, 'columns']:
+        if axis not in [1, 'columns']:
             total = maparg[axis](df, totals)
         else:
             total = maparg[axis](df, col, totals)
         return total
 
-    df_output = copy_df(df)
-    df_output = add_semantics(df_output)
-    col_semantics = df_output.semantics.col.copy()
-    row_semantics = df_output.semantics.row.copy()
+    df_out = copy_df(df)
+    df_out = add_semantics(df_out)
+    col_semantics = df_out.semantics.col.copy()
+    row_semantics = df_out.semantics.row.copy()
 
     # add column index for labelling percentage columns
-    nlevels = df_output.columns.nlevels + 1
+    nlevels = df_out.columns.nlevels + 1
     levels = list(range(nlevels))
     levels.append(levels.pop(0))
-    df_output = pd.concat([df_output], axis=1, keys=[name_abs]).reorder_levels(
+    df_out = pd.concat([df_out], axis=1, keys=[name_abs]).reorder_levels(
         levels, axis=1)
 
     # add percentage columns
@@ -718,6 +726,21 @@ def add_perc_cols(
             abs_col = *col, name_abs
 
         total = set_total(df, col, axis, totals)
+        col_idx = df_out.columns.get_loc(abs_col)
+        new_cols = df_out.columns.insert(col_idx + 1, new_col)
+        col_semantics.insert(col_idx + 1, 'p')
+        if col_semantics[col_idx] == 'T':
+            col_semantics[col_idx + 1] = 'P'
+        df_out = pd.DataFrame(df_out, columns=new_cols)
+        df_out[new_col] = df_out[abs_col] / total * 100
+        if round is not None:
+            df_out[new_col] = df_out[new_col].round(round)
+
+    df_out.semantics.col = col_semantics
+    df_out.semantics.row = row_semantics
+    return df_out
+
+
 def add_perc_cols2(
     df,
     axis='grand',
@@ -965,7 +988,7 @@ def _add_sub_agg(df, level, axis=0, agg='sum', label=None, round=1):
 
     if label is None:
         if isinstance(agg, str):
-        label = agg
+            label = agg
         else:
             label = agg.__name__
 
