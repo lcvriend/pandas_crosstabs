@@ -21,17 +21,9 @@ def ct(
     totals_col=True,
     totals_row=True,
     totals_name='Totals',
-    perc_cols=False,
-    perc_axis='grand',
-    perc_round=1,
-    name_abs='abs',
-    name_rel='%',
 ):
     """
     Create frequency crosstab for selected categories.
-    Categories are mapped to specified row and column fields.
-    Group by and count selected categories in df.
-    Then set to rows and columns in crosstab output.
 
     Parameters
     ==========
@@ -50,24 +42,11 @@ def ct(
     :param totals: boolean, None default None
         Shorthand for setting `totals_col` and `totals_row`.
         Adds both totals to columns and to rows.
-        If set, overrides both arguments.
+        If set, overrides both other arguments.
     :param totals_col: boolean, default True
-        Add totals to column.
+        Add totals to columns.
     :param totals_row: boolean, default True
-        Add totals to row.
-    :param perc_cols: boolean, default False
-        Add relative frequency per column
-    :param perc_axis: {'grand', 'index', 'columns'}, or {0,1}, default 'grand'
-        'grand' - Calculate percentages from grand total.
-        'index', 0 - Calculate percentages from row totals.
-        'columns', 1 - Calculate percentages from column totals.
-    :param round: int or None, default 1
-        Number of decimal places to round percentages to.
-        If None percentages will not be rounded.
-    :param name_abs: str, default 'abs'
-        Name for absolute column.
-    :param name_rel: str, default '%'
-        Name for relative column.
+        Add totals to rows.
 
     Returns
     =======
@@ -161,17 +140,6 @@ def ct(
         df.semantics.col[-1] = 'T'
     if totals_row:
         df.semantics.row[-1] = 'T'
-
-    # percentage columns
-    if perc_cols:
-        df = add_perc_cols(
-            df,
-            axis=perc_axis,
-            totals='auto',
-            round=perc_round,
-            name_abs=name_abs,
-            name_rel=name_rel,
-        )
     return df
 
 
