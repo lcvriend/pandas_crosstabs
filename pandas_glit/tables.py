@@ -1019,7 +1019,6 @@ def order_cat(df, categories):
     """
     Add ordered categories to a DataFrame.
     """
-    from pandas.api.types import CategoricalDtype
     categories = CategoricalDtype(categories=categories, ordered=True)
     df = df.astype(categories)
     return df
