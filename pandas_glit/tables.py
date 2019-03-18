@@ -378,7 +378,7 @@ def _totals_col(df, col, totals):
             return df.iloc[sel][col].values[0]
         else:
             return df[col].sum()
-    except:
+    except TypeError:
         total = df.iloc[-1][col]
         if totals == 'auto':
             if not total == df.iloc[:nrows - 1][col].sum():
@@ -408,7 +408,7 @@ def _totals_row(df, totals):
             return df.iloc[:, 0]
         else:
             return df.sum(axis=1)
-    except:
+    except TypeError:
         total = df.iloc[:, -1]
         if totals == 'auto':
             if not total.equals(df.iloc[:, :ncols - 1].sum(axis=1)):
@@ -444,7 +444,7 @@ def _grand_total(df, totals):
             return df.loc[sel_row, :].sum(axis=1).values[0]
         else:
             return df.sum().sum()
-    except:
+    except TypeError:
         total = df.iloc[-1, -1]
         if totals == 'auto':
             if not total == df.iloc[:nrows - 1, :ncols - 1].values.sum():
