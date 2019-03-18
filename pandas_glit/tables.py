@@ -260,6 +260,7 @@ def _add_per_col(
     df_out = add_semantics(df_out)
     col_semantics = df_out.semantics.col.copy()
     row_semantics = df_out.semantics.row.copy()
+    valid_rows = [item in valid_semantics for item in row_semantics]
 
     # add column index for labelling percentage columns
     edit = True
@@ -333,7 +334,7 @@ def _add_per_col(
         if col_semantics[col_idx] == 'T':
             col_semantics[col_idx + 1] = f'P{perc_type}'
         df_out = pd.DataFrame(df_out, columns=new_cols)
-        df_out[new_col] = df_out[abs_col] / total * 100
+        df_out[new_col] = df_out.loc[valid_rows, abs_col] / total * 100
         if round is not None:
             df_out[new_col] = df_out[new_col].round(round)
 
