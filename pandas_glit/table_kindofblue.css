@@ -9,8 +9,9 @@ edge_lvl_col = -1
     --hdr-color-light: rgb(39, 55, 70);
     --border-color-dark: rgb(23, 32, 42);
     --border-color-light: rgb(171, 178, 185);
-    --cell-dark: rgb(214, 221, 228);
-    --cell-light: rgb(235, 240, 245);
+    --cell-dark: rgb(225, 231, 238);
+    --cell-light: rgb(238, 242, 247);
+    --hover: rgb(205, 196, 219);
 }
 
 /* table general */
@@ -80,8 +81,8 @@ table.kindofblue {
 }
 
 /* rows types */
-.kindofblue tr:nth-child(even),
-.kindofblue tr:nth-child(odd) {
+.kindofblue tbody tr:nth-child(even),
+.kindofblue tbody tr:nth-child(odd) {
     background: unset;
 }
 .kindofblue tr.tbl_row {
@@ -99,8 +100,9 @@ table.kindofblue {
     background: var(--cell-light);
     border-top: 2px dotted var(--border-color-light);
 }
-.kindofblue tbody tr.tbl_row:hover {
-    background: rgb(242, 244, 244);
+.kindofblue tbody tr.tbl_row:hover th,
+.kindofblue tbody tr.tbl_row:hover td {
+    background: var(--hover);
 }
 
 /* column types */
