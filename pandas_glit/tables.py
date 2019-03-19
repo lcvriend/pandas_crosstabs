@@ -562,7 +562,10 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
 
     # DataFrame without MultiIndex
     if nlevels == 1:
-        df_out[label] = return_semantics(df_out, axis=1).agg(agg, axis=1)
+        agg_vals = return_semantics(df_out, axis=1).agg(agg, axis=1)
+        if round is not None:
+            agg_vals = agg_vals.round(round)
+        df_out[label] = agg_vals
         df_out.semantics.col.append('a')
         if axis == 0:
             df_out = df_out.T
@@ -605,7 +608,10 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
     if level == 0:
         empty = ('',) * (nlevels - 1)
         key = label, *empty
-        df_out[key] = df.loc[:, v_cols].agg(agg, axis=1)
+        agg_vals = df.loc[:, v_cols].agg(agg, axis=1)
+        if round is not None:
+            agg_vals = agg_vals.round(round)
+        df_out[key] = agg_vals
         df_out.semantics.col.append('a')
         if axis == 0:
             df_out = df_out.T
