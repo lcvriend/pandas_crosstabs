@@ -230,7 +230,14 @@ class FancyTable:
                 )
             return html_repr
 
-        values = self.df.astype(str).values  # cast all values as strings
+        # cast all values as strings
+        df = self.df.copy()
+        for col in df.columns:
+            try:
+                df[col] = df[col].fillna('')
+            except ValueError:
+                pass
+        values = df.astype(str).values
         row_vals = list()
         for row_idx, row in enumerate(values):
             val_line = [
