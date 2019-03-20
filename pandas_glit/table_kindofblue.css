@@ -9,9 +9,9 @@ edge_lvl_col = -1
     --hdr-color-light: rgb(39, 55, 70);
     --border-color-dark: rgb(23, 32, 42);
     --border-color-light: rgb(171, 178, 185);
-    --cell-dark: rgb(225, 231, 238);
-    --cell-light: rgb(238, 242, 247);
-    --hover: rgb(205, 196, 219);
+    --cell-dark: rgb(203, 220, 238);
+    --cell-light: rgb(231, 241, 252);
+    --hover: rgb(208, 197, 226);
 }
 
 /* table general */
