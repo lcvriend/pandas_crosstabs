@@ -541,6 +541,8 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
     Main logic to the add_sub_agg function.
     """
 
+    valid_semantics = ['v', 'T', 't']
+
     semantic_code = {
         'sum': 't',
         'count': 'c',
@@ -559,13 +561,14 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
     col_semantics = df_out.semantics.col
     row_semantics = df_out.semantics.row
     nlevels = df.columns.nlevels
+    valid_rows = [item in valid_semantics for item in row_semantics]
 
     # DataFrame without MultiIndex
     if nlevels == 1:
         agg_vals = return_semantics(df_out, axis=1).agg(agg, axis=1)
         if round is not None:
             agg_vals = agg_vals.round(round)
-        df_out[label] = agg_vals
+        df_out.loc[valid_rows, label] = agg_vals
         df_out.semantics.col.append('a')
         if axis == 0:
             df_out = df_out.T
@@ -600,7 +603,7 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
         i += 1
 
     # collect columns with values and columns with content
-    content = ['v', 'p']
+    content = ['v', 'pg', 'pr', 'pc']
     v_cols = [elem == 'v' for elem in col_semantics]
     c_cols = [elem in content for elem in col_semantics]
 
@@ -608,7 +611,7 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
     if level == 0:
         empty = ('',) * (nlevels - 1)
         key = label, *empty
-        agg_vals = df.loc[:, v_cols].agg(agg, axis=1)
+        agg_vals = df.loc[valid_rows, v_cols].agg(agg, axis=1)
         if round is not None:
             agg_vals = agg_vals.round(round)
         df_out[key] = agg_vals
@@ -639,22 +642,21 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
             df.loc[:, c_cols]
               .xs([*key], axis=1, level=level_list, drop_level=False)
             )
-
         key_last_col = tbl_grp.iloc[:, -1].name
+
+        # set new column key
         lst_last_col = list(key_last_col)
         lst_last_col[level] = label
-
-        i = level
-        while i < (nlevels - 1):
+        i = level + 1
+        while i < (nlevels):
             lst_last_col[i] = ''
             i += 1
         key_new_col = tuple(lst_last_col)
 
         # insert new column
         idx_col = df_out.columns.get_loc(key_last_col) + 1
-        extended_cols = df_out.insert(idx_col, key_new_col, 0)
+        df_out.insert(idx_col, key_new_col, None)
         col_semantics.insert(idx_col, semantic_code)
-        df_out = pd.DataFrame(df_out, columns=extended_cols)
 
         # aggregate and update
         tbl_grp = (
@@ -671,7 +673,7 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
             columns=multiindex,
             index=df.index,
             )
-        df_out.update(df_col)
+        df_out.update(df_col.loc[valid_rows, :])
 
     # transpose if aggregating on index and store semantics
     if axis == 0:
