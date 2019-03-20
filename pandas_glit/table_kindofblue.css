@@ -100,10 +100,6 @@ table.kindofblue {
     background: var(--cell-light);
     border-top: 2px dotted var(--border-color-light);
 }
-.kindofblue tbody tr.tbl_row:hover th,
-.kindofblue tbody tr.tbl_row:hover td {
-    background: var(--hover);
-}
 
 /* column types */
 .kindofblue th.totals_col,
@@ -131,4 +127,10 @@ table.kindofblue {
 }
 .kindofblue tbody tr:not(.totals_row) td.agg_col {
     background: var(--cell-light);
+}
+
+/* hover */
+.kindofblue tbody tr.tbl_row:hover th,
+.kindofblue tbody tr.tbl_row:hover td {
+    background: var(--hover);
 }
