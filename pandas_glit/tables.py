@@ -584,8 +584,8 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
     # set levels
     if level > nlevels - 1:
         raise Exception(
-            f'The index has {nlevels - 1} useable levels: '
-            f'{list(range(nlevels - 1))}. Level {level} is out of bounds.'
+            f'The index has {nlevels} useable levels: '
+            f'{list(range(nlevels))}. Level {level} is out of bounds.'
             )
 
     # deal with categorical indexes
