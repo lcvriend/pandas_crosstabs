@@ -616,17 +616,9 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
             agg_vals = agg_vals.round(round)
         df_out[key] = agg_vals
         df_out.semantics.col.append('a')
-        if axis == 0:
-            df_out = df_out.T
-            df_out = df_out.astype(original_dtypes)
-            df_out.semantics.col = row_semantics
-            df_out.semantics.row = col_semantics
-        else:
-            df_out.semantics.col = col_semantics
-            df_out.semantics.row = row_semantics
-        return df_out
 
     # aggregation on level > 0
+    else:
     # collect column keys for specified level
     col_keys = list()
     for col in df.loc[:, v_cols].columns.remove_unused_levels():
