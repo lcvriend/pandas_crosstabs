@@ -4,6 +4,7 @@ tables
 Wrappers for pandas for transforming DataFrame into aggregated tables.
 """
 
+import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 from pandas_glit.semantics import add_semantics
@@ -619,53 +620,53 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
 
     # aggregation on level > 0
     else:
-    # collect column keys for specified level
-    col_keys = list()
-    for col in df.loc[:, v_cols].columns.remove_unused_levels():
-        fnd_col = col[: level]
-        col_keys.append(fnd_col)
-    col_keys = list(dict.fromkeys(col_keys))
+        # collect column keys for specified level
+        col_keys = list()
+        for col in df.loc[:, v_cols].columns.remove_unused_levels():
+            fnd_col = col[: level]
+            col_keys.append(fnd_col)
+        col_keys = list(dict.fromkeys(col_keys))
 
-    # select groups from table, sum them and add to df
-    level_list = list(range(level))
-    for key in col_keys:
-        # find last key in group
-        tbl_grp = (
-            df.loc[:, c_cols]
-              .xs([*key], axis=1, level=level_list, drop_level=False)
-            )
-        key_last_col = tbl_grp.iloc[:, -1].name
+        # select groups from table, sum them and add to df
+        level_list = list(range(level))
+        for key in col_keys:
+            # find last key in group
+            tbl_grp = (
+                df.loc[:, c_cols]
+                .xs([*key], axis=1, level=level_list, drop_level=False)
+                )
+            key_last_col = tbl_grp.iloc[:, -1].name
 
-        # set new column key
-        lst_last_col = list(key_last_col)
-        lst_last_col[level] = label
-        i = level + 1
-        while i < (nlevels):
-            lst_last_col[i] = ''
-            i += 1
-        key_new_col = tuple(lst_last_col)
+            # set new column key
+            lst_last_col = list(key_last_col)
+            lst_last_col[level] = label
+            i = level + 1
+            while i < (nlevels):
+                lst_last_col[i] = ''
+                i += 1
+            key_new_col = tuple(lst_last_col)
 
-        # insert new column
-        idx_col = df_out.columns.get_loc(key_last_col) + 1
+            # insert new column
+            idx_col = df_out.columns.get_loc(key_last_col) + 1
             df_out.insert(idx_col, key_new_col, np.nan)
-        col_semantics.insert(idx_col, semantic_code)
+            col_semantics.insert(idx_col, semantic_code)
 
-        # aggregate and update
-        tbl_grp = (
-            df.loc[:, v_cols]
-              .xs([*key], axis=1, level=level_list, drop_level=False)
-            )
+            # aggregate and update
+            tbl_grp = (
+                df.loc[:, v_cols]
+                .xs([*key], axis=1, level=level_list, drop_level=False)
+                )
 
-        agg_vals = tbl_grp.agg(agg, axis=1).values
-        if round is not None:
-            agg_vals = agg_vals.round(round)
-        multiindex = pd.MultiIndex.from_tuples([key_new_col])
-        df_col = pd.DataFrame(
-            data=agg_vals,
-            columns=multiindex,
-            index=df.index,
-            )
-        df_out.update(df_col.loc[valid_rows, :])
+            agg_vals = tbl_grp.agg(agg, axis=1).values
+            if round is not None:
+                agg_vals = agg_vals.round(round)
+            multiindex = pd.MultiIndex.from_tuples([key_new_col])
+            df_col = pd.DataFrame(
+                data=agg_vals,
+                columns=multiindex,
+                index=df.index,
+                )
+            df_out.update(df_col.loc[valid_rows, :])
 
     # transpose if aggregating on index and store semantics
     if axis == 0:
