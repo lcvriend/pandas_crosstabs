@@ -598,7 +598,7 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
         try:
             new_level = df_out.columns.levels[i].add_categories('')
             df_out.columns.set_levels(new_level, level=i, inplace=True)
-        except:
+        except AttributeError:
             pass
         i += 1
 
