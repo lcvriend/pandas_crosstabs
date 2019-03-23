@@ -3,7 +3,9 @@ Module for the FancyTable class.
 """
 
 import itertools
+import pandas as pd
 from pathlib import Path
+from pandas_glit import semantics
 
 
 class FancyTable:
@@ -36,6 +38,7 @@ class FancyTable:
         style=None,
         edge_lvl_row=None,
         edge_lvl_col=None,
+        max_rows=100,
     ):
         self.df = df
         self.nlevels_col = df.columns.nlevels
@@ -66,6 +69,8 @@ class FancyTable:
             self.nlevels_col,
             edge_level=self.edge_lvl_col,
             )
+
+        self.max_rows = max_rows
 
     @property
     def edge_lvl_row(self):
@@ -197,12 +202,29 @@ class FancyTable:
         return thead
 
     def _tbody(self, tid='cell'):
+        # copy df and limit rows if df exceeds max rows
+        df = semantics.copy_df(self.df)
+        if len(df) > self.max_rows:
+            head = self.max_rows // 2
+            len_tail = self.max_rows - head
+            tail = len(df) - len_tail
+            filt = [x <= head or x >= tail for x in range(len(df))]
+            semantics_row = list(itertools.compress(df.semantics.row, filt))
+            semantics_row.insert(head, 'v')
+            semantics_col = df.semantics.col
+            trunc_row = pd.DataFrame(
+                columns=df.columns,
+                index=['...'],
+                ).fillna('...')
+            df = df.head(head).append(trunc_row).append(df.tail(len_tail))
+            df.semantics.row = semantics_row
+            df.semantics.col = semantics_col
         row_elements = list()
 
         # indices
         i = 0
         while i < self.nlevels_row:
-            idx_names = self.get_idx_keys(self.df.index, i)
+            idx_names = self.get_idx_keys(df.index, i)
             spans = self.find_spans(idx_names)
             level = self.set_idx_names(spans, i, axis=0)
             row_elements.append(level)
@@ -216,7 +238,7 @@ class FancyTable:
                 classes.append('col_edge')
             for key in self.CLASS_VALUES_COL:
                 try:
-                    if self.df.semantics.col[col_idx] == key:
+                    if df.semantics.col[col_idx] == key:
                         classes.append(self.CLASS_VALUES_COL[key])
                 except TypeError:
                     pass
@@ -231,7 +253,6 @@ class FancyTable:
             return html_repr
 
         # cast all values as strings
-        df = self.df.copy()
         for col in df.columns:
             try:
                 df[col] = df[col].fillna('')
@@ -260,7 +281,7 @@ class FancyTable:
                 classes.append('row_edge')
             for key in self.CLASS_VALUES_ROW:
                 try:
-                    if self.df.semantics.row[idx] == key:
+                    if df.semantics.row[idx] == key:
                         classes.append(self.CLASS_VALUES_ROW[key])
                 except TypeError:
                     pass
