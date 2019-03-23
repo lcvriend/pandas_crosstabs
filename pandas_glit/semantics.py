@@ -105,6 +105,7 @@ def copy_df(df, transpose=False):
     Copy DataFrame while preserving the semantics.
     """
 
+    df = add_semantics(df)
     col_semantics = df.semantics.col.copy()
     row_semantics = df.semantics.row.copy()
 
