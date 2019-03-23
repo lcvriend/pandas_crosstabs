@@ -404,6 +404,10 @@ class Style:
     DEFAULT = 'kindofblue'
 
     def __init__(self, style=None):
+        self.styles = [
+            path.stem.split('_')[1]
+            for path in self.path_to_css.glob('table_*.css')
+            ]
         if style is not None:
             self._check_style(style)
         self.style = self.DEFAULT if style is None else style
@@ -416,13 +420,6 @@ class Style:
                 f'Style \'{style}\' not found, '
                 f'available styles are: {self.styles}'
                 )
-
-    @property
-    def styles(self):
-        return [
-            path.stem.split('_')[1]
-            for path in self.path_to_css.glob('table_*.css')
-            ]
 
     @property
     def style(self):
