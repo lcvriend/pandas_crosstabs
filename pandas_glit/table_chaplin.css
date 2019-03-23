@@ -29,7 +29,7 @@ table.chaplin {
 .chaplin th.row_name,
 .chaplin td.tbl_cell {
     display: table-cell;
-    padding: 0.75em;
+    padding: 0.6em;
     font-family: 'Source Sans Pro', sans-serif;
     font-weight: 700;
     font-size: 15px;
