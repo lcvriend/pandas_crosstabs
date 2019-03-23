@@ -647,7 +647,7 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
 
         # insert new column
         idx_col = df_out.columns.get_loc(key_last_col) + 1
-        df_out.insert(idx_col, key_new_col, None)
+            df_out.insert(idx_col, key_new_col, np.nan)
         col_semantics.insert(idx_col, semantic_code)
 
         # aggregate and update
@@ -670,7 +670,11 @@ def _add_agg(df, level, axis=0, agg='sum', label=None, round=1):
     # transpose if aggregating on index and store semantics
     if axis == 0:
         df_out = df_out.T
-        df_out = df_out.astype(original_dtypes)
+        for col in df_out.columns:
+            try:
+                df_out[col] = df_out[col].astype(original_dtypes[col])
+            except ValueError:
+                df_out[col] = df_out[col].astype('float')
         df_out.semantics.col = row_semantics
         df_out.semantics.row = col_semantics
     else:
