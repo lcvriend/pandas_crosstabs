@@ -54,7 +54,7 @@ def ct(
     :crosstab: DataFrame
     """
 
-    df = df.copy()
+    df_out = df.copy()
 
     if totals is not None:
         totals_col = totals
@@ -62,7 +62,7 @@ def ct(
 
     if not column_fields:
         column_fields = '_tmp'
-        df[column_fields] = '_tmp'
+        df_out[column_fields] = '_tmp'
 
     # assure row and column fields are lists
     if not isinstance(row_fields, list):
@@ -72,37 +72,37 @@ def ct(
 
     margins = totals_col or totals_row
 
-    # set columns to use/select from df
+    # set columns to use/select from df_out
     group_cols = column_fields.copy()
     group_cols.extend(row_fields)
 
     # fill nan if ignore_nan is False
     if not ignore_nan:
         for col in group_cols:
-            if df[col].isnull().values.any():
-                if df[col].dtype.name == 'category':
-                    df[col] = df[col].cat.add_categories([''])
-                df[col] = df[col].fillna('')
+            if df_out[col].isnull().values.any():
+                if df_out[col].dtype.name == 'category':
+                    df_out[col] = df_out[col].cat.add_categories([''])
+                df_out[col] = df_out[col].fillna('')
 
     # find column for counting that is not in group_cols
     check = False
     i = 0
     while not check:
         try:
-            col = df.columns[i]
+            col = df_out.columns[i]
             if col not in group_cols:
                 check = True
             i += 1
         except KeyError:
-            df['_tmp'] = '_tmp'
+            df_out['_tmp'] = '_tmp'
             col = '_tmp'
             check = True
 
     # pivot table
-    df = df.groupby(group_cols)[[col]].count()
-    df = df.dropna()
-    df = pd.pivot_table(
-        df.reset_index(),
+    df_out = df_out.groupby(group_cols)[[col]].count()
+    df_out = df_out.dropna()
+    df_out = pd.pivot_table(
+        df_out.reset_index(),
         index=row_fields,
         columns=column_fields,
         aggfunc='sum',
@@ -110,38 +110,38 @@ def ct(
         margins=margins,
         margins_name=totals_name,
     )
-    df = df.dropna(how='all')
+    df_out = df_out.dropna(how='all')
 
     if margins:
         if not totals_col:
-            df = df.drop(totals_name, axis=1, level=1)
+            df_out = df_out.drop(totals_name, axis=1, level=1)
         if not totals_row:
             try:
-                df = df.drop(totals_name, axis=0, level=0)
+                df_out = df_out.drop(totals_name, axis=0, level=0)
             except KeyError:
-                df = df.drop(totals_name, axis=0)
-    df.columns = df.columns.droplevel(0)
-    df = df.fillna(0)
+                df_out = df_out.drop(totals_name, axis=0)
+    df_out.columns = df_out.columns.droplevel(0)
+    df_out = df_out.fillna(0)
 
     # remove row/columns where all values are 0
-    df = df.loc[(df != 0).any(axis=1)]
-    df = df.loc[:, (df != 0).any(axis=0)]
-    df = df.astype('int64')
+    df_out = df_out.loc[(df_out != 0).any(axis=1)]
+    df_out = df_out.loc[:, (df_out != 0).any(axis=0)]
+    df_out = df_out.astype('int64')
 
     # try to remove temp column
     try:
-        df = df.drop('_tmp', axis=1)
-        df.columns.name = ''
+        df_out = df_out.drop('_tmp', axis=1)
+        df_out.columns.name = ''
     except KeyError:
         pass
 
     # add semantics
-    df = add_semantics(df)
+    df_out = add_semantics(df_out)
     if totals_col:
-        df.semantics.col[-1] = 'T'
+        df_out.semantics.col[-1] = 'T'
     if totals_row:
-        df.semantics.row[-1] = 'T'
-    return df
+        df_out.semantics.row[-1] = 'T'
+    return df_out
 
 
 def percentages(
