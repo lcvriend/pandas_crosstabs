@@ -22,10 +22,12 @@ class FancyTable:
         'Pg': 'totals_perc_col',
         'a': 'agg_col',
         'c': 'agg_col',
+        '.': 'trunc',
     }
     CLASS_VALUES_ROW = {
         'T': 'totals_row',
         'a': 'agg_row',
+        '.': 'trunc',
     }
 
     path_to_css = Path(__file__).resolve().parent
@@ -210,7 +212,7 @@ class FancyTable:
             tail = len(df) - len_tail
             filt = [x <= head or x >= tail for x in range(len(df))]
             semantics_row = list(itertools.compress(df.semantics.row, filt))
-            semantics_row.insert(head, 'v')
+            semantics_row.insert(head, '.')
             semantics_col = df.semantics.col
             trunc_row = pd.DataFrame(
                 columns=df.columns,
