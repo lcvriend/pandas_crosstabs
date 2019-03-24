@@ -100,6 +100,12 @@ table.kindofblue {
     background: var(--kindofblue-cell-light);
     border-top: 2px dotted var(--kindofblue-border-light);
 }
+.kindofblue tbody tr.trunc th,
+.kindofblue tbody tr.trunc td.tbl_cell {
+    background: var(--kindofblue-cell-light);
+    padding-top: 0;
+    padding-bottom: 0;
+}
 
 /* column types */
 .kindofblue th.totals_col,
