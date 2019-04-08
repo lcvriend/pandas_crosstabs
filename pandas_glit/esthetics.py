@@ -2,11 +2,12 @@
 Module for the FancyTable class.
 """
 
+import locale
 import itertools
 import pandas as pd
 from pathlib import Path
 from pandas_glit import semantics
-
+locale.setlocale(locale.LC_NUMERIC, '')
 
 class FancyTable:
     """
@@ -180,7 +181,7 @@ class FancyTable:
                     try:
                         if self.df.semantics.col[col_idx] == key:
                             classes.append(self.CLASS_VALUES_COL[key])
-                    except KeyError:
+                    except TypeError:
                         pass
                 classes = ' '.join(classes)
                 classes = f' {classes}' if classes != '' else ''
@@ -260,7 +261,9 @@ class FancyTable:
                 df[col] = df[col].fillna('')
             except ValueError:
                 pass
-        values = df.astype(str).values
+
+        values = df.applymap(convert)
+        values = values.astype(str).values
         row_vals = list()
         for row_idx, row in enumerate(values):
             val_line = [
@@ -454,3 +457,9 @@ class Style:
     def css(self):
         style_path = self.path_to_css / f'table_{self.style}.css'
         return style_path.read_text()
+
+
+def convert(x):
+    if isinstance(x, (int, float, complex)):
+        return f"{x:n}"
+    return x
