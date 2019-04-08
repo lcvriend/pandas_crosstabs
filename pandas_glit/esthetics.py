@@ -9,6 +9,7 @@ from pathlib import Path
 from pandas_glit import semantics
 locale.setlocale(locale.LC_NUMERIC, '')
 
+
 class FancyTable:
     """
     Class for adding custom styling to DataFrames.
