@@ -1,0 +1,94 @@
+/*
+edge_lvl_row = nogrid
+edge_lvl_col = nogrid
+*/
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700');
+/* variables */
+:root {
+    --chaplin-hdr: black;
+    --chaplin-cell: rgb(238, 238, 238);
+    --chaplin-hover: rgb(212, 212, 212);
+}
+
+/* table general */
+table.chaplin {
+    display: table;
+    border-collapse: collapse;
+}
+.chaplin thead,
+.chaplin tbody {
+    display: table-header-group;
+}
+.chaplin tr {
+    display: table-row;
+}
+.chaplin th.col_idx_name,
+.chaplin th.col_name,
+.chaplin th.row_idx_name,
+.chaplin td.row_idx_post,
+.chaplin th.row_name,
+.chaplin td.tbl_cell {
+    display: table-cell;
+    padding: 0.6em;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+/* indeces */
+.chaplin th.col_idx_pre,
+.chaplin th.col_idx_name,
+.chaplin tr th.col_name {
+    background: var(--chaplin-hdr);
+    color: white;
+}
+.chaplin th.row_idx_name,
+.chaplin td.row_idx_post {
+    background: var(--chaplin-hdr);
+    color: white;
+}
+.chaplin th.col_idx_name {
+    text-align: right;
+}
+.chaplin th.row_idx_name,
+.chaplin th.row_name {
+    text-align: left;
+}
+.chaplin th.col_name {
+    text-align: center;
+}
+
+/* cells */
+.chaplin td.tbl_cell {
+    text-align: right;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+/* rows types */
+.chaplin tbody tr:nth-child(even) {
+    background: None;
+}
+.chaplin tbody tr:nth-child(odd) {
+    background: var(--chaplin-cell);
+}
+.chaplin tr.totals_row th,
+.chaplin tr.totals_row td {
+    font-weight: bold;
+}
+
+/* column types */
+.chaplin td.totals_col,
+.chaplin td.totals_perc_col {
+    font-weight: bold;
+}
+.chaplin td.perc_col,
+.chaplin td.totals_perc_col {
+    font-style: italic;
+}
+
+/* hover */
+.chaplin tbody tr.tbl_row:hover th,
+.chaplin tbody tr.tbl_row:hover td {
+    background: var(--chaplin-hover);
+}

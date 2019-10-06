@@ -1,6 +1,9 @@
 name: pandas-glit
 dependencies:
-- python=3.7
-- pandas=0.24.1
-- jupyter
-- flake8
+  - python=3.7
+  - pandas>=0.24.1
+  - jupyter
+  - jupyterlab
+  - ipykernel
+  - flake8
+  - black

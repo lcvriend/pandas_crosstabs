@@ -1,0 +1,95 @@
+/*
+edge_lvl_row = -1
+edge_lvl_col = -1
+*/
+@import url('https://fonts.googleapis.com/css?family=Overpass+Mono');
+table.minimal {
+    display: table;
+    border-collapse: collapse;
+    border: None;
+}
+.minimal thead,
+.minimal tbody {
+    display: table-header-group;
+}
+.minimal tr {
+    display: table-row;
+}
+.minimal th.col_idx_name,
+.minimal th.col_name,
+.minimal th.row_idx_name,
+.minimal td.row_idx_post,
+.minimal th.row_name,
+.minimal td.tbl_cell {
+    display: table-cell;
+    padding: 0.25em 0.5em;
+    font-family: 'Overpass Mono', monospace;
+    font-weight: bold;
+    font-size: 12px;
+}
+.minimal td.tbl_cell {
+    font-size: 12px;
+}
+.minimal th.col_idx_pre,
+.minimal th.col_idx_name,
+.minimal tr th.col_name {
+    background: rgb(255, 255, 255);
+    color: black;
+}
+.minimal td.row_idx_name,
+.minimal td.row_idx_post {
+    background: rgb(255, 255, 255);
+    color: black;
+}
+.minimal th.col_idx_name {
+    text-align: right;
+}
+.minimal td.row_idx_name,
+.minimal th.row_name {
+    text-align: left;
+}
+.minimal th.col_name {
+    text-align: center;
+}
+.minimal th.col_idx_name,
+.minimal td.row_idx_name,
+.minimal th.row_name,
+.minimal th.col_edge,
+.minimal td.col_edge {
+    border-right: 1px solid rgb(39, 223, 161);
+}
+.minimal th.col_idx_name,
+.minimal tr th:last-of-type {
+    border-right: 2px solid rgb(25, 146, 106);
+}
+.minimal thead tr th:last-child,
+.minimal tr td:last-child {
+    border-right: None;
+}
+.minimal td.tbl_cell {
+    text-align: right;
+    font-weight: 400;
+}
+.minimal tr.tbl_row:nth-child(even),
+.minimal tr.tbl_row:nth-child(odd) {
+    background: unset;
+}
+.minimal tr.totals_row {
+    border-top: 1px solid rgb(39, 223, 161);
+}
+.minimal thead {
+    border-bottom: 2px solid rgb(25, 146, 106);
+}
+.minimal tbody tr.tbl_row {
+    border-bottom: None;
+}
+.minimal thead tr.tbl_row,
+.minimal tbody tr.tbl_row.row_edge {
+    border-top: 1px solid rgb(39, 223, 161);
+}
+.minimal tr.tbl_row:last-of-type {
+    border-bottom: None;
+}
+.minimal tbody tr.tbl_row:hover {
+    background: rgb(189, 233, 180);
+}
