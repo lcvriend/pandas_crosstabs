@@ -9,6 +9,7 @@ import pandas as pd
 
 @pd.api.extensions.register_dataframe_accessor('semantics')
 class Semantics(object):
+
     SEMANTIC_VALUES = {
         'v': 'value',
         'T': 'total',
@@ -25,8 +26,8 @@ class Semantics(object):
 
     def __init__(self, pandas_obj):
         self._obj = pandas_obj
-        self._col = None
-        self._row = None
+        self.col = None
+        self.row = None
 
     def __repr__(self):
         representation = (
@@ -34,22 +35,6 @@ class Semantics(object):
             f'rows: {" | ".join(self.row)}'
         )
         return representation
-
-    @property
-    def col(self):
-        return self._col
-
-    @property
-    def row(self):
-        return self._row
-
-    @col.setter
-    def col(self, col):
-        self._col = col
-
-    @row.setter
-    def row(self, row):
-        self._row = row
 
 
 def add_semantics(df):
@@ -76,7 +61,7 @@ def return_semantics(df, axis='both', semantics='v'):
             f'Semantics argument must be passed a string '
             f'or a list of strings representing the possible semantic values: '
             f'{Semantics.SEMANTIC_VALUES}'
-            )
+        )
 
     cols = [item in semantics for item in df.semantics.col]
     rows = [item in semantics for item in df.semantics.row]

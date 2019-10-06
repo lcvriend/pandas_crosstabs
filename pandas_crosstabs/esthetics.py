@@ -5,8 +5,8 @@ Module for the FancyTable class.
 import locale
 import itertools
 import pandas as pd
-from pathlib import Path
-from pandas_glit import semantics
+from pandas_crosstabs import semantics
+from pandas_crosstabs.config import PATHS, TABLES
 locale.setlocale(locale.LC_NUMERIC, '')
 
 
@@ -14,6 +14,7 @@ class FancyTable:
     """
     Class for adding custom styling to DataFrames.
     """
+
     CLASS_VALUES_COL = {
         'pc': 'perc_col',
         'pr': 'perc_col',
@@ -32,9 +33,7 @@ class FancyTable:
         '.': 'trunc',
     }
 
-    path_to_css = Path(__file__).resolve().parent
-    tab_len = 4
-    tab = ' ' * tab_len
+    tab = ' ' * TABLES.n_tabs
 
     def __init__(
         self,
@@ -405,15 +404,10 @@ class FancyTable:
         return spans
 
 
-class Style:
-    path_to_css = Path(__file__).resolve().parent
-    DEFAULT = 'kindofblue'
+class Style(object):
+    DEFAULT = TABLES.default
 
     def __init__(self, style=None):
-        self.styles = [
-            path.stem.split('_')[1]
-            for path in self.path_to_css.glob('css/table_*.css')
-            ]
         if style is not None:
             self._check_style(style)
         self.style = self.DEFAULT if style is None else style
@@ -421,11 +415,16 @@ class Style:
     def _check_style(self, style):
         if not isinstance(style, str):
             raise TypeError('Input has to be the name (string) of a style.')
-        if style not in self.styles:
+        if style not in self.AVAILABLE_STYLES:
             raise ValueError(
                 f'Style \'{style}\' not found, '
-                f'available styles are: {self.styles}'
-                )
+                f'available styles are: {self.AVAILABLE_STYLES}'
+            )
+
+    @property
+    def AVAILABLE_STYLES(self):
+        files = PATHS.css.glob('table_*.css')
+        return [path.stem.split('_')[1] for path in files]
 
     @property
     def style(self):
@@ -435,7 +434,7 @@ class Style:
     def style(self, value):
         """
         Setter for the style.
-        Also loads the edge levels in a style if any are defined.
+        Also loads the default edge levels in a style if any are defined.
         """
 
         self._style = value
@@ -456,7 +455,7 @@ class Style:
 
     @property
     def css(self):
-        style_path = self.path_to_css / f'css/table_{self.style}.css'
+        style_path = PATHS.css / f'table_{self.style}.css'
         return style_path.read_text()
 
 

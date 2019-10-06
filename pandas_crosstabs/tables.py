@@ -7,13 +7,15 @@ Wrappers for pandas for transforming DataFrame into aggregated tables.
 import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
-from pandas_glit.semantics import add_semantics
-from pandas_glit.semantics import return_semantics
-from pandas_glit.semantics import copy_df
-from pandas_glit.semantics import AXIS_NAMES
+from pandas_crosstabs.semantics import (
+    add_semantics,
+    return_semantics,
+    copy_df,
+    AXIS_NAMES,
+)
 
 
-def ct(
+def crosstab(
     df,
     row_fields,
     column_fields,
@@ -688,6 +690,7 @@ def order_cat(df, categories):
     """
     Add ordered categories to a DataFrame.
     """
+
     categories = CategoricalDtype(categories=categories, ordered=True)
     df = df.astype(categories)
     return df
