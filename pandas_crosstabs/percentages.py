@@ -13,6 +13,84 @@ from pandas_crosstabs.semantics import (
 )
 
 
+AXES = {
+    0: 0,
+    'row': 0,
+    'index': 0,
+    1: 1,
+    'col': 1,
+    'column': 1,
+}
+
+
+def percentages(df, axis=0, ndigits=None, label_abs='abs', label_rel='%'):
+    """
+    Add percentage columns to a numerical dataframe.
+
+    Arguments
+    ---------
+    df : DataFrame
+        df with numerical data.
+    axis : {0, 1, 'grand'}, default 0
+        'index',  'row', 0 - Calculate percentages from row totals.
+        'column', 'col', 1 - Calculate percentages from column totals.
+        'grand'            - Calculate percentages from grand total.
+    ndigits : int, default=None
+        Precision in decimal digits.
+    label_abs : default='abs'
+        Label for the absolute columns.
+    label_rel : default='%'
+        Label for the relative columns.
+
+    Returns
+    -------
+    DataFrame:
+        df with relative columns added to the numerical data.
+    """
+
+    if not axis in AXES and not axis == 'grande':
+        raise ValueError(
+            f"Invalid value for axis: '{axis}'.")
+
+    df = df.copy()
+    if axis == 0:
+        df = df.T
+
+    if (df.iloc[:-1].sum() == df.iloc[-1]).all():
+        total = df.iloc[-1]
+    else:
+        total = df.sum()
+
+    if axis == 'grand':
+        if total[:-1].sum() == total.iloc[-1]:
+            total = total.iloc[-1]
+        else:
+            total = total.sum()
+
+    percs = df / total * 100
+    if ndigits is not None:
+        percs = percs.round(ndigits)
+
+    if axis == 0:
+        df = df.T
+        percs = percs.T
+
+    if df.columns.nlevels == 1:
+        rel_columns = ((column, label_rel) for column in df.columns)
+        abs_columns = ((column, label_abs) for column in df.columns)
+    else:
+        rel_columns = ((*column, label_rel) for column in df.columns)
+        abs_columns = ((*column, label_abs) for column in df.columns)
+
+    percs.columns = pd.MultiIndex.from_tuples(rel_columns)
+    df.columns = pd.MultiIndex.from_tuples(abs_columns)
+
+    new_tuples = (i for items in zip(df.columns, percs.columns) for i in items)
+    columns = pd.MultiIndex.from_tuples(new_tuples)
+    df = df.join(percs)[columns]
+    return df
+
+
 def percentages_old(
     df,
     axis='grand',
