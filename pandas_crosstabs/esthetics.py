@@ -10,7 +10,7 @@ from pandas_crosstabs.config import PATHS, TABLES
 locale.setlocale(locale.LC_NUMERIC, '')
 
 
-class FancyTable:
+class FancyTable(object):
     """
     Class for adding custom styling to DataFrames.
     """

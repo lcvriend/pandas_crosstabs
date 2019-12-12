@@ -105,6 +105,7 @@ def get_list(value):
 # easy access to settings and paths
 config = load_ini(CFG_FILE)
 TABLES = get_section(config, 'TABLES')
+PERCENTAGES = get_section(config, 'PERCENTAGES')
 PATHS = get_section(
     config,
     'PATHS',
